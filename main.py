@@ -2,41 +2,31 @@
 
 from Tkinter import *
 from ttk import Frame, Button, Style
+import os
 import UDP
 
-class GUI(Frame):
-	def __init__(self, parent):
-		Frame.__init__(self, parent)
-
-		self.parent = parent
-
-		self.parent.title("Dashboard: 2016 Offseason")
-		self.style = Style()
-		self.style.theme_use("default")
-
-		frame = Frame(self, relief=RAISED, borderwidth=1)
-		frame.pack(fill=BOTH, expand=True) 
-
-		self.pack(fill=BOTH, expand=True)
-
-		self.positionWindow()
-		self.okButton = Button(self, text="OK")
-		self.okButton.pack(side=RIGHT, padx=5, pady=5)
-	
-	def positionWindow(self):
-		width  = self.parent.winfo_screenwidth()
-		height = self.parent.winfo_screenheight()/2
-		self.parent.geometry("%dx%d+-5+0"%(width,height))
-
 root = Tk()
-window = GUI(root)
+
+width  = root.winfo_screenwidth()
+height = root.winfo_screenheight()/2
+root.geometry('{}x{}+-6+0'.format(width,height))
+root.resizable(width=False, height=False)
+
+console = Text(root, width=80, font="CourierNew 12",  bg="black", fg="#55FF55", relief=RAISED)
+console.grid(row=0,column=0)
+
+console.insert(END, "Welcome to DIY Dashboard\n")
+console.config(state=DISABLED)
 
 while 1:
 	root.update_idletasks()
 	root.update()
 	try:
-		data = UDP.getData()
+		data, addr = UDP.getData()
 		if(data[:7] == ":PRINT:"):
-			print data[7:]
+			console.config(state=NORMAL)
+			console.insert(END, str(addr[0]) + ": " + data[7:] + "\n")
+			console.see(END)
+			console.config(state=DISABLED)
 	except UDP.socket.timeout:
 		pass

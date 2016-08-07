@@ -3,8 +3,7 @@
 import socket
 
 def getData():
-	data, addr = sock.recvfrom(1024)
-	return data
+	return sock.recvfrom(1024)
 
 UDP_IP = "0.0.0.0"
 UDP_PORT = 3641
