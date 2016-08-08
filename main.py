@@ -4,19 +4,24 @@ from Tkinter import *
 from ttk import Frame, Button, Style
 import os
 import UDP
+import swerveVisual
+from swerveVisual import Point
 
 root = Tk()
 
-width  = root.winfo_screenwidth()
-height = root.winfo_screenheight()/2
+width  = 1920#root.winfo_screenwidth()
+height = root.winfo_screenheight()*2/3
 root.geometry('{}x{}+-6+0'.format(width,height))
 root.resizable(width=False, height=False)
 
-console = Text(root, width=80, font="CourierNew 12",  bg="black", fg="#55FF55", relief=RAISED)
+#Adding a Console for Debuging
+console = Text(root, width=80, height=19, font="CourierNew 12",  bg="black", fg="#55FF55", relief=RAISED)
 console.grid(row=0,column=0)
-
 console.insert(END, "Welcome to DIY Dashboard\n")
 console.config(state=DISABLED)
+
+#Swerve Visual:
+swerveGraphic= swerveVisual.Swerve(root,Point(200,50),Point(50,50),Point(50,200),Point(200,200))
 
 while 1:
 	root.update_idletasks()
@@ -28,5 +33,7 @@ while 1:
 			console.insert(END, str(addr[0]) + ": " + data[7:] + "\n")
 			console.see(END)
 			console.config(state=DISABLED)
+		if(data[:8] == ":SWERVE:"):
+			swerveGraphic.rotate(float(data[8:]))
 	except UDP.socket.timeout:
 		pass
