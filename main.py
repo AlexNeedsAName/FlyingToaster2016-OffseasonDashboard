@@ -33,7 +33,9 @@ while 1:
 			console.insert(END, str(addr[0]) + ": " + data[7:] + "\n")
 			console.see(END)
 			console.config(state=DISABLED)
-		if(data[:8] == ":SWERVE:"):
-			swerveGraphic.rotate(float(data[8:]))
+		elif(data[:8] == ":SWERVE:"):
+			d = dict(s.split("=") for s in data[8:].split(";"))
+			swerveGraphic.rotate(float(d["R"]))
+			swerveGraphic.updateWheels(float(d["wIR"]), float(d["wIP"]), float(d["wIIR"]), float(d["wIIP"]), float(d["wIIIR"]), float(d["wIIIP"]), float(d["wIVR"]), float(d["wIVP"]))
 	except UDP.socket.timeout:
 		pass

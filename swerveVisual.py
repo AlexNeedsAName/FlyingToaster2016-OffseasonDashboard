@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 from Tkinter import *
 import math
 
@@ -13,35 +12,46 @@ class Point():
 		return Point(x,y)
 
 class Arrow():
-	def __init__(self, center, canvas, scale, color):
-		self.center = center
+	def __init__(self, center, canvas, length, tipLength, color, width):
 		self.canvas = canvas
+		self.width = width
+		self.color = color
+		self.drawn = False
+		self.tipLength = tipLength
+		self.set(center, math.pi/2, length)
 
-		n=15*scale
-		self.n = n
+	def set(self, center, radians, length):
+		self.center = center
+		self.radians = -radians -  math.pi/2
+		self.p1 = Point((self.center.x + math.sin(self.radians) * length/2), (self.center.y + math.cos(self.radians)*length/2))
+		self.p2 = Point((self.center.x - math.sin(self.radians) * length/2), (self.center.y - math.cos(self.radians)*length/2))
+		self.p3 = Point((self.p2.x + math.sin(self.radians+math.pi/4) * self.tipLength), (self.p2.y + math.cos(self.radians+math.pi/4)*self.tipLength))
+		self.p4 = Point((self.p2.x + math.sin(self.radians-math.pi/4) * self.tipLength), (self.p2.y + math.cos(self.radians-math.pi/4)*self.tipLength))
 
-		self.Tip = Point(center.x,	center.y-3*n)
-		self.p1 = Point(self.Tip.x-n*1.5,self.Tip.y+2*n)
-		self.p2 = Point(self.Tip.x-n/2,	self.Tip.y+2*n)
-		self.p3 = Point(self.Tip.x-n/2,	self.Tip.y+6*n)
-		self.p4 = Point(self.Tip.x+n/2,	self.Tip.y+6*n)
-		self.p5 = Point(self.Tip.x+n/2,	self.Tip.y+2*n)
-		self.p6 = Point(self.Tip.x+n*1.5,self.Tip.y+2*n)
-
-		self.arrow = self.canvas.create_polygon(self.Tip.x, self.Tip.y, self.p1.x, self.p1.y, self.p2.x, self.p2.y, self.p3.x, self.p3.y, self.p4.x, self.p4.y, self.p5.x, self.p5.y, self.p6.x, self.p6.y, fill=color)
-
-	def rotate(self,theta):
-		self.rTip = self.Tip.rotate(theta,self.center)
-		self.rp1 = self.p1.rotate(theta,self.center)
-		self.rp2 = self.p2.rotate(theta,self.center)
-		self.rp3 = self.p3.rotate(theta,self.center)
-		self.rp4 = self.p4.rotate(theta,self.center)
-		self.rp5 = self.p5.rotate(theta,self.center)
-		self.rp6 = self.p6.rotate(theta,self.center)
+		if(self.drawn):
+			self.undraw()
+		else:
+			self.drawn = True
 		self.draw()
 
 	def draw(self):
-		self.canvas.coords(self.arrow,self.rTip.x, self.rTip.y, self.rp1.x, self.rp1.y, self.rp2.x, self.rp2.y, self.rp3.x, self.rp3.y, self.rp4.x, self.rp4.y, self.rp5.x, self.rp5.y, self.rp6.x, self.rp6.y)
+		self.line1 = self.canvas.create_line(self.p1.x, self.p1.y, self.p2.x, self.p2.y, width=self.width, fill=self.color)
+		self.line2 = self.canvas.create_line(self.p2.x, self.p2.y, self.p3.x, self.p3.y, width=self.width, fill=self.color)
+		self.line3 = self.canvas.create_line(self.p2.x, self.p2.y, self.p4.x, self.p4.y, width=self.width, fill=self.color)
+
+	def undraw(self):
+		self.canvas.delete(self.line1)
+		self.canvas.delete(self.line2)
+		self.canvas.delete(self.line3)
+
+
+
+class Wheel():
+	def __init__(self, center, canvas):
+		self.canvas = canvas
+		self.arrow = Arrow(center, self.canvas, 1, 7.5, "black", 2)
+	def rotate(self, theta, center, power):
+		self.arrow.set(center, theta, 50*power)
 
 class Swerve():
 	def __init__(self, parrent, I, II, III, IV):
@@ -54,16 +64,28 @@ class Swerve():
 		self.swerve = Canvas(self.parrent, bg="white", height=250, width=250)
 		self.swerve.grid(row=0,column=1)
 		self.chassisG = self.swerve.create_polygon(I.x,I.y,II.x,II.y,III.x,III.y,IV.x,IV.y,fill="gray")
-		self.arrow = Arrow(self.center, self.swerve, 1, "white")
+		self.arrow = Arrow(self.center, self.swerve, 50, 15, "white", 2)
+
+		self.wI = Wheel(I,self.swerve)
+		self.wII = Wheel(II,self.swerve)
+		self.wIII = Wheel(III,self.swerve)
+		self.wIV = Wheel(IV,self.swerve)
+
+	def updateWheels(self, wIR, wIP, wIIR, wIIP, wIIIR, wIIIP, wIVR, wIVP):
+		self.wI.rotate(self.radians-wIR,self.rI, wIP)
+		self.wII.rotate(self.radians-wIIR,self.rII, wIIP)
+		self.wIII.rotate(self.radians-wIIIR,self.rIII, wIIIP)
+		self.wIV.rotate(self.radians-wIVR,self.rIV, wIVP)
 
 	def rotate(self,theta):
+		self.radians = theta
 		self.rI = self.I.rotate(theta,self.center)
 		self.rII = self.II.rotate(theta,self.center)
 		self.rIII = self.III.rotate(theta,self.center)
 		self.rIV = self.IV.rotate(theta,self.center)
 		self.draw()
 
-		self.arrow.rotate(theta)
+		self.arrow.set(self.center, theta-math.pi/2, 50)
 
 	def draw(self):
 		self.swerve.coords(self.chassisG,self.rI.x,self.rI.y,self.rII.x,self.rII.y,self.rIII.x,self.rIII.y,self.rIV.x,self.rIV.y)
